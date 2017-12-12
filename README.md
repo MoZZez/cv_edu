@@ -6,7 +6,7 @@ My homework for computer vision and graphics course.
 hw1_tools.py - contains all image processing tools for homework № 1.
 * linear correction.
 * crop
-* grayscale convertion.
+* grayscale convertion
 * blur
 
 homework1.py - launching script with reqired arguments parsing.
