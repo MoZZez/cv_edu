@@ -8,3 +8,6 @@ hw1_tools.py - contains all image processing tools for homework № 1.
 * crop
 * grayscale convertion.
 * blur
+
+homework1.py - launching script with reqired arguments parsing.
+partly was shared from: https://github.com/elyha7/computer_graphics
