@@ -94,13 +94,40 @@ def invert(img):
 
 
 def add_pads(img,ker_size):
+    
     ker_rad_y = ker_size[0] // 2
     ker_rad_x = ker_size[1] // 2
     
     shape = (img.shape[0]+ker_rad_y*2,img.shape[1]+ker_rad_x*2,img.shape[2])
     
-    with_pads = np.zeros(shape)
+    with_pads = np.zeros(shape,dtype=np.uint8)
+    
+    vert_pads_shape = (with_pads.shape[0],ker_rad_y,with_pads.shape[2])
+    hor_pads_shape = (ker_rad_x,with_pads.shape[1],with_pads.shape[2])
+    
+    top_add = np.zeros(hor_pads_shape,dtype=np.uint8)
+    top_add[:,ker_rad_x:-ker_rad_x] = np.array(img[:ker_rad_y])
+    #print(top_add[:,ker_rad_x:-ker_rad_x].shape,img[-ker_rad_y:].shape)
+   
+    
+    bot_add = np.zeros(hor_pads_shape,dtype=np.uint8)
+    bot_add[:,ker_rad_x:-ker_rad_x] = np.array(img[-ker_rad_y:])
+    
+    
+    left_add = np.zeros(vert_pads_shape,dtype=np.uint8)
+    left_add[ker_rad_y:-ker_rad_y,:] = np.array(img[:,:ker_rad_x])
+    
+    right_add = np.zeros(vert_pads_shape,dtype=np.uint8)
+    right_add[ker_rad_y:-ker_rad_y,:] = np.array(img[:,-ker_rad_x-1:-1])
+    
+    with_pads[:,:ker_rad_x] = left_add
+    with_pads[:,-ker_rad_x-1:-1] = right_add
+    
+    with_pads[:ker_rad_y,:] = top_add
+    with_pads[-ker_rad_y-1:-1,:] = bot_add
+    
     with_pads[ker_rad_y:-ker_rad_y,ker_rad_x:-ker_rad_x] = np.array(img)
+    
     return with_pads
 
 def cut_pads(img, ker_size):
@@ -112,7 +139,10 @@ def cut_pads(img, ker_size):
 
 def convolve(img, kernel, median=False):
     padded_img = add_pads(img, kernel.shape)
-    
+    #cv2.imshow('original',padded_img)
+    #cv2.imshow('cut',out)
+    #cv2.waitKey()
+    #cv2.destroyAllWindows()
     ker_rad_y = kernel.shape[0] // 2
     ker_rad_x = kernel.shape[1] // 2
     
@@ -120,8 +150,10 @@ def convolve(img, kernel, median=False):
     img = img.astype(float)
     kernel = np.expand_dims(kernel,axis=2)
     #center_cords = [ker_rad_y,ker_rad_x]
-    for i in range(ker_rad_y, img.shape[0]):
-        for j in range(ker_rad_x,img.shape[1]):
+    
+    max_x_to = 0
+    for i in range(ker_rad_y, img.shape[0]+ker_rad_y):
+        for j in range(ker_rad_x,img.shape[1]+ker_rad_x):
                 center_cords = [i,j]
             
                 y_from = center_cords[0] - ker_rad_y
@@ -132,12 +164,19 @@ def convolve(img, kernel, median=False):
                 if median == True:
                     new_value = np.median(padded_img[y_from:y_to+1, x_from:x_to+1],axis=(0,1))
                 else:
+                    if x_to > max_x_to:
+                        max_x_to = x_to
                     conv_res = kernel * padded_img[y_from:y_to+1, x_from:x_to+1]
                     new_value = np.sum(conv_res,axis=(0,1))
                 #print('Performing dilation!')
                 out[i,j] = new_value
     out = out.astype(np.uint8)
+    #print(max_x_to,img.shape[1],padded_img.shape[1])
     out = cut_pads(out,kernel.shape)
+    #cv2.imshow('original',out_cut)
+    #cv2.imshow('cut',out)
+    #cv2.waitKey()
+    #cv2.destroyAllWindows()
     return out
 
 def get_gauss_kernel(gamma):
