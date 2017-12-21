@@ -78,3 +78,34 @@ def blur(img,mode='avg',kernel_side=3):
     dst = cv2.filter2D(img, -1,kernel) 
     
     return dst
+
+def WB(img,mode='ww'):
+    
+    if mode == 'ww':
+        img_gr = cv2.cvtColor(img, cv2.COLOR_RGB2GRAY)
+        img = img.astype(float)
+        max_ind = np.unravel_index(img_gr.argmax(), img_gr.shape)
+    
+        max_pixel = img[max_ind[0],max_ind[1]]
+        
+        img = (255/max_pixel)*img
+    elif mode == 'gw':
+        img = img.astype(float)
+        means = np.mean(img,axis=(0,1))
+        mean = np.mean(means)
+        
+        img = img * (mean/means)
+    img[img<0] = 0
+    img[img>255] = 255
+    img = img.astype(np.uint8)
+    return img
+
+def nonlinear_corr(img,gamma):
+    img = img.astype(float)
+    img = ((img/255)**gamma)*255
+    img = img.astype(np.uint8)
+    return img
+
+def invert(img):
+    img = 255 - img
+    return img

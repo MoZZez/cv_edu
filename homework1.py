@@ -30,30 +30,31 @@ if args.corr_linear:#implemented
     result=linear_correction(img)
     cv2.imwrite(args.corr_linear[-1],result)
     
-if args.corr_nonlinear:
-    img=Image.open(args.corr_nonlinear[-2])
-    result=Correction(img,mode='power',gamma=float(args.corr_nonlinear[0]))
-    result.save(args.corr_nonlinear[-1])
+if args.corr_nonlinear:#implemented
+    img=cv2.imread(args.corr_nonlinear[-2])
+    gamma=float(args.corr_nonlinear[0])
+    result = nonlinear_corr(img,gamma)
+    cv2.imwrite(args.corr_nonlinear[-1],result)
     
-if args.invert:
-    img=Image.open(args.invert[-2])
-    result=ColorFilter(img,mode='negative')
-    result.save(args.invert[-1])
+if args.invert:#implemented
+    img=cv2.imread(args.invert[-2])
+    result=invert(img)
+    cv2.imwrite(args.invert[-1],result)
     
 if args.bw:#implemented
     img=cv2.imread(args.bw[-2])
     result=to_grayscale(img)
     cv2.imwrite(args.bw[-1],result)
     
-if args.wb_ww:
-    img=Image.open(args.wb_ww[-2])
-    result=WhiteBalance(img,mode='white')
-    result.save(args.wb_ww[-1])
+if args.wb_ww:#implemented
+    img=cv2.imread(args.wb_ww[-2])
+    result=WB(img,mode='ww')
+    cv2.imwrite(args.wb_ww[-1],result)
     
-if args.wb_gw:
-    img=Image.open(args.wb_gw[-2])
-    result=WhiteBalance(img,mode='grey')
-    result.save(args.wb_gw[-1])
+if args.wb_gw:#implemented
+    img=cv2.imread(args.wb_gw[-2])
+    result=WB(img,mode='gw')
+    cv2.imwrite(args.wb_gw[-1],result)
     
 if args.box:#implemented
     img=cv2.imread(args.box[-2])
