@@ -19,7 +19,7 @@ parser.add_argument("-invert",'--invert', nargs = 2)
 parser.add_argument("-bw",'--bw', nargs = 2)#implemented
 parser.add_argument("-wb_ww",'--wb_ww', nargs = 2)
 parser.add_argument("-wb_gw",'--wb_gw', nargs = 2)
-parser.add_argument("-gauss",'--gauss', nargs = 4)
+parser.add_argument("-gauss",'--gauss', nargs = 3)
 parser.add_argument("-box",'--box', nargs = 3)#implemented.
 parser.add_argument("-median",'--median', nargs = 3)
 parser.add_argument("-crop",'--crop', nargs = 6)#implemented
@@ -61,15 +61,15 @@ if args.box:#implemented
     result=blur(img,kernel_side=int(args.box[0]))
     cv2.imwrite(args.box[-1],result)
     
-if args.gauss:
-    img=Image.open(args.gauss[-2])
-    result=CustomFilter(img,filter_size=int(args.gauss[0]),mode='gaus',sigma=int(args.gauss[1]))
-    result.save(args.gauss[-1])
+if args.gauss:#implemented
+    img=cv2.imread(args.gauss[-2])
+    result=blur(img,mode='gauss',gamma=int(args.gauss[0]))
+    cv2.imwrite(args.gauss[-1],result)
     
-if args.median:
-    img=Image.open(args.median[-2])
-    result=CustomFilter(img,filter_size=int(args.median[0]),mode='median')
-    result.save(args.median[-1])
+if args.median:#implemented
+    img=cv2.imread(args.median[-2])
+    result=blur(img,kernel_side=int(args.median[0]),mode='median')
+    cv2.imwrite(args.median[-1], result)
     
 if args.crop:#implemented
     img=cv2.imread(args.crop[-2])

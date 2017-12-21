@@ -61,24 +61,6 @@ def crop(img, top_left_point,size):
     cropped = img[top_left_point[0]:top_left_point[0]+size[0],top_left_point[1]:top_left_point[1]+size[1]]
     return cropped
 
-
-def blur(img,mode='avg',kernel_side=3):
-    '''
-    Most naive blur with averaging filter.
-    
-    Args:
-         img - original img 2D or 3D np.array.
-         
-    Returns:
-            2D or 3D numpy array of inputs size.
-    '''
-    if mode == 'avg':
-        kernel = np.ones((kernel_side,kernel_side), dtype=float)
-        kernel = kernel/(kernel_side**2)
-    dst = cv2.filter2D(img, -1,kernel) 
-    
-    return dst
-
 def WB(img,mode='ww'):
     
     if mode == 'ww':
@@ -109,3 +91,94 @@ def nonlinear_corr(img,gamma):
 def invert(img):
     img = 255 - img
     return img
+
+
+def add_pads(img,ker_size):
+    ker_rad_y = ker_size[0] // 2
+    ker_rad_x = ker_size[1] // 2
+    
+    shape = (img.shape[0]+ker_rad_y*2,img.shape[1]+ker_rad_x*2,img.shape[2])
+    
+    with_pads = np.zeros(shape)
+    with_pads[ker_rad_y:-ker_rad_y,ker_rad_x:-ker_rad_x] = np.array(img)
+    return with_pads
+
+def cut_pads(img, ker_size):
+    ker_rad_y = ker_size[0] // 2
+    ker_rad_x = ker_size[1] // 2
+    
+    img_cut = np.array(img[ker_rad_y:-ker_rad_y,ker_rad_x:-ker_rad_x])
+    return img_cut
+
+def convolve(img, kernel, median=False):
+    padded_img = add_pads(img, kernel.shape)
+    
+    ker_rad_y = kernel.shape[0] // 2
+    ker_rad_x = kernel.shape[1] // 2
+    
+    out = np.zeros(padded_img.shape, dtype=float)
+    img = img.astype(float)
+    kernel = np.expand_dims(kernel,axis=2)
+    #center_cords = [ker_rad_y,ker_rad_x]
+    for i in range(ker_rad_y, img.shape[0]):
+        for j in range(ker_rad_x,img.shape[1]):
+                center_cords = [i,j]
+            
+                y_from = center_cords[0] - ker_rad_y
+                y_to = center_cords[0] + ker_rad_y
+                
+                x_from = center_cords[1] - ker_rad_x
+                x_to = center_cords[1] + ker_rad_x
+                if median == True:
+                    new_value = np.median(padded_img[y_from:y_to+1, x_from:x_to+1],axis=(0,1))
+                else:
+                    conv_res = kernel * padded_img[y_from:y_to+1, x_from:x_to+1]
+                    new_value = np.sum(conv_res,axis=(0,1))
+                #print('Performing dilation!')
+                out[i,j] = new_value
+    out = out.astype(np.uint8)
+    out = cut_pads(out,kernel.shape)
+    return out
+
+def get_gauss_kernel(gamma):
+    """
+    creates gaussian kernel with side length l and a sigma of sig
+    """
+    #not really sure how to handle one-cell-kernel convolution
+    if gamma < 2:
+        gamma = 3
+    l = int(gamma)
+    sig = gamma / 3
+
+    ax = np.arange(-l // 2 + 1., l // 2 + 1.)
+    xx, yy = np.meshgrid(ax, ax)
+
+    kernel = np.exp(-(xx**2 + yy**2) / (2. * sig**2))
+
+    return kernel / np.sum(kernel)
+
+
+def blur(img,mode='avg',kernel_side=3, gamma=3.):
+    '''
+    Most naive blur with averaging filter.
+    
+    Args:
+         img - original img 2D or 3D np.array.
+         
+    Returns:
+            2D or 3D numpy array of inputs size.
+    '''
+    if mode == 'avg':
+        kernel = np.ones((kernel_side,kernel_side), dtype=float)
+        kernel = kernel/(kernel_side**2)
+        dst = convolve(img, kernel) 
+        
+    elif mode == 'gauss':
+        gamma = float(gamma)
+        kernel = get_gauss_kernel(gamma)
+        dst = convolve(img, kernel)
+        
+    elif mode == 'median':
+        kernel = np.ones((kernel_side,kernel_side), dtype=float)
+        dst = convolve(img, kernel, median=True)
+    return dst
