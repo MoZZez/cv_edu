@@ -7,7 +7,7 @@ hw1_tools.py - contains all image processing tools for homework № 1.
 * linear correction.
 * crop
 * grayscale convertion
-* blur
+* blur(gauss,median,box)
 * White Balance(Gray/White world)
 * invertion
 * Non Linear Correction
